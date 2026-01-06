@@ -1,0 +1,17 @@
+{
+  "name": "myclinic-backend",
+  "version": "0.0.1",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "sync:users": "node scripts/syncUsers.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "firebase-admin": "^12.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  }
+}

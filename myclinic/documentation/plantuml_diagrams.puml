@@ -1,0 +1,167 @@
+' Diagramme de classes
+@startuml
+class User {
+  +uid: string
+  +name: string
+  +email: string
+  +role: Role
+}
+enum Role { patient, doctor, admin }
+
+class Doctor {
+  +id: string
+  +name: string
+  +clinicName: string
+  +specialties: string[]
+  +phone: string
+  +status: string
+  +availability: Availability[]
+}
+class Availability {
+  +day: string
+  +slots: string[]
+}
+
+class Patient {
+  +id: string
+  +name: string
+  +email: string
+}
+
+class Appointment {
+  +id: string // slotKey
+  +doctorId: string
+  +patientId: string
+  +doctorName: string
+  +clinicName: string
+  +patientName: string
+  +scheduledAt: Timestamp
+  +status: string // pending|confirmed|cancelled|completed
+  +reason: string
+  +notes: string
+  +createdAt: Timestamp
+}
+
+class Prescription {
+  +id: string
+  +patientId: string
+  +doctorId: string
+  +createdAt: Timestamp
+  +content: string
+}
+
+class MedicalRecord {
+  +id: string
+  +patientId: string
+  +doctorId: string
+  +entries: string
+  +updatedAt: Timestamp
+}
+
+User "1" -- "0..1" Patient : role=patient
+User "1" -- "0..1" Doctor : role=doctor
+Doctor "1" o-- "many" Availability
+Doctor "1" -- "many" Appointment : doctorId
+Patient "1" -- "many" Appointment : patientId
+Doctor "1" -- "many" Prescription : doctorId
+Patient "1" -- "many" Prescription : patientId
+Doctor "1" -- "many" MedicalRecord : doctorId
+Patient "1" -- "many" MedicalRecord : patientId
+@enduml
+
+' Diagramme de cas d'utilisation
+@startuml
+actor Patient
+actor Doctor
+actor Admin
+
+rectangle "MyClinic" {
+  usecase "S’authentifier" as UCAuth
+  usecase "Rechercher un médecin" as UCSearch
+  usecase "Voir détails médecin" as UCDetails
+  usecase "Prendre rendez-vous" as UCBook
+  usecase "Voir rendez-vous" as UCListP
+  usecase "Annuler rendez-vous" as UCCancelP
+
+  usecase "Voir rendez-vous (médecin)" as UCListD
+  usecase "Confirmer rendez-vous" as UCConfirm
+  usecase "Annuler rendez-vous (médecin)" as UCCancelD
+  usecase "Gérer disponibilités" as UCAvail
+  usecase "Gérer patients / dossiers" as UCPatDoc
+
+  usecase "Gérer utilisateurs" as UCAdminUsers
+  usecase "Gérer médecins/patients" as UCAdminEntities
+  usecase "Superviser rendez-vous" as UCAdminAppts
+}
+
+Patient --> UCAuth
+Patient --> UCSearch
+Patient --> UCDetails
+Patient --> UCBook
+Patient --> UCListP
+Patient --> UCCancelP
+
+Doctor --> UCAuth
+Doctor --> UCListD
+Doctor --> UCConfirm
+Doctor --> UCCancelD
+Doctor --> UCAvail
+Doctor --> UCPatDoc
+
+Admin --> UCAuth
+Admin --> UCAdminUsers
+Admin --> UCAdminEntities
+Admin --> UCAdminAppts
+@enduml
+
+' Diagramme de séquence — Prise de rendez-vous et confirmation
+@startuml
+actor Patient
+participant App_Patient
+participant Firestore
+actor Doctor
+participant App_Doctor
+
+Patient -> App_Patient : Ouvre DoctorDetails\nSélectionne date/heure
+App_Patient -> Firestore : Query appointments (doctorId)\nfiltre créneaux par date et status != cancelled
+App_Patient -> Firestore : runTransaction\nget appointments/{slotKey}
+alt existe & status != cancelled
+  Firestore --> App_Patient : Erreur "créneau réservé"
+else n’existe pas ou status == cancelled
+  App_Patient -> Firestore : set appointments/{slotKey}\nstatus=pending
+  Firestore --> App_Patient : OK
+end
+App_Patient --> Patient : Affiche rendez-vous pending
+
+Doctor -> App_Doctor : Ouvre Mes rendez-vous
+App_Doctor -> Firestore : Query appointments (doctorId)
+App_Doctor --> Doctor : Liste des rendez-vous
+
+Doctor -> App_Doctor : Confirmer rendez-vous
+App_Doctor -> Firestore : update appointments/{slotKey}\nstatus=confirmed
+Firestore --> App_Doctor : OK
+App_Doctor --> Doctor : Badge updated
+
+... après date passée au chargement ...
+App_Doctor -> Firestore : update status=completed (si non cancelled/completed)
+App_Patient -> Firestore : idem côté patient
+@enduml
+
+' Diagramme d’activité — Cycle de vie d’un rendez-vous
+@startuml
+start
+:Créer demande (pending);
+if (Médecin confirme ?) then (Oui)
+  :status = confirmed;
+else (Non)
+  :status = cancelled;
+endif
+
+if (Date passée ?) then (Oui)
+  if (status != cancelled && status != completed) then (Oui)
+    :status = completed;
+  endif
+endif
+
+stop
+@enduml

@@ -1,0 +1,24 @@
+{
+  "name": "myclinic",
+  "version": "0.0.1",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "expo": "^54.0.0",
+    "expo-router": "^4.0.0",
+    "react": "18.2.0",
+    "react-native": "0.76.3",
+    "firebase": "^11.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/react": "^18.2.0",
+    "@types/react-native": "^0.73.0"
+  }
+}

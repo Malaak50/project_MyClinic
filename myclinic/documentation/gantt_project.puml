@@ -1,0 +1,27 @@
+@startgantt
+Project starts 2025-11-20
+today is 2026-01-06
+saturday are closed
+sunday are closed
+[Analyse des besoins] as A lasts 5 days
+A is colored in #546E7A
+[Cahier des charges] as CC lasts 3 days and starts at A's end
+CC is colored in #546E7A
+[Conception UML] as UML lasts 7 days and starts at CC's end
+UML is colored in #546E7A
+[M1 - Spécifications validées] happens at CC's end
+[M2 - UML validé] happens at UML's end
+[Implémentation Frontend] as FE lasts 10 days and starts at UML's end
+FE is colored in #1E88E5
+[Implémentation Backend] as BE lasts 10 days and starts at UML's end
+BE is colored in #43A047
+[Intégration & Revue de code] as INT lasts 3 days and starts at FE's end
+INT is colored in #8E24AA
+[Test & QA] as QA lasts 5 days and starts at INT's end
+QA is colored in #FB8C00
+[Déploiement] as DEP lasts 3 days and starts at QA's end
+DEP is colored in #00ACC1
+[Rédaction Rapport] as RAP lasts 5 days and starts at DEP's end
+RAP is colored in #3949AB
+[M3 - Soutenance prête] happens at RAP's end
+@endgantt

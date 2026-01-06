@@ -1,0 +1,260 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\includegraphics[height=0.9cm]{assets/university_logo.png}}
+\rhead{MyClinic — Rapport Universitaire}
+\cfoot{\thepage}
+\usepackage{titlesec}
+\titleformat{\chapter}{\huge\bfseries}{\thechapter}{1em}{}
+\usepackage{adjustbox}
+\newcommand{\universitylogo}{assets/university_logo.png}
+\newcommand{\applogo}{assets/logo.png}
+\newcommand{\universityname}{Nom de l'Université}
+\newcommand{\departmentname}{Nom du Département}
+\newcommand{\reporttitle}{MyClinic — Gestion des Rendez-vous Médicaux}
+\newcommand{\authorname}{Votre Nom}
+\newcommand{\supervisorname}{Encadrant: Dr. Nom}
+\newcommand{\academicyear}{2025/2026}
+\newcommand{\reportdate}{\today}
+\begin{document}
+\begin{titlepage}
+\begin{minipage}[t]{0.22\textwidth}
+\includegraphics[width=\textwidth]{\universitylogo}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.73\textwidth}
+\begin{center}
+{\Large \universityname}\\[0.2cm]
+{\large \departmentname}\\[1.0cm]
+{\huge \textbf{\reporttitle}}\\[0.8cm]
+\includegraphics[height=2.6cm]{\applogo}\\[0.8cm]
+{\large \textbf{Rapport Universitaire}}\\[0.8cm]
+\begin{tabular}{rl}
+\textbf{Auteur:} & \authorname \\
+\textbf{\supervisorname} & \\
+\textbf{Année académique:} & \academicyear \\
+\textbf{Date:} & \reportdate \\
+\end{tabular}
+\end{center}
+\end{minipage}
+\end{titlepage}
+\pagenumbering{roman}
+\begin{abstract}
+Ce rapport présente la conception et le développement de \textbf{MyClinic}, une application mobile pour la gestion des rendez-vous médicaux, réalisée en binôme ou groupe avec répartition des tâches frontend, backend et tests. L’application repose sur \textit{Expo / React Native} et \textit{Firebase} (Authentication, Firestore). Sont détaillés l’analyse des besoins, le cahier des charges, l’architecture, la modélisation UML, l’implémentation, la sécurité, les tests, le déploiement, la gestion de projet (Taiga, Git) et les perspectives.
+\end{abstract}
+\tableofcontents
+\listoffigures
+\listoftables
+\newpage
+\pagenumbering{arabic}
+\chapter{Introduction générale}
+Contexte de digitalisation du secteur de la santé et objectifs du projet MyClinic. Problèmes des doubles réservations et des pertes d’information, besoin d’une solution mobile fiable et sécurisée.
+\chapter{Contexte et Problématique}
+Complexité de coordination patient/médecin, contraintes techniques (créneaux, authentification, stockage fiable, UX). Nécessité d’une solution robuste et ergonomique.
+\chapter{Analyse des besoins et Cahier des Charges}
+\section{Exigences Fonctionnelles}
+\begin{itemize}
+\item Recherche et filtrage des médecins par spécialité et disponibilité.
+\item Prise, modification et annulation de rendez-vous.
+\item Consultation des rendez-vous à venir pour patients et médecins.
+\item Gestion des disponibilités et planning des médecins.
+\item Notifications de confirmation, annulation, rappel.
+\end{itemize}
+\section{Exigences Non-Fonctionnelles}
+\begin{itemize}
+\item Performance et réactivité sur mobile.
+\item Sécurité et confidentialité des données.
+\item Résilience en cas de perte de connexion.
+\item Accessibilité et ergonomie cohérentes.
+\item Portabilité et maintenabilité du code.
+\end{itemize}
+\section{Contraintes}
+\begin{itemize}
+\item Dépendances aux plateformes mobiles (iOS/Android).
+\item Connectivité Internet requise pour Firebase.
+\item Respect des normes de protection des données.
+\item Gestion des rôles (Patient, Médecin, Admin) et permissions associées.
+\end{itemize}
+\chapter{Architecture et Conception}
+\section{Vue d’Ensemble}
+Organisation par rôles via Expo Router: espaces Patient, Médecin et Admin. Composants UI réutilisables, thème centralisé, services Firebase pour auth et données.
+\section{Frontend}
+Expo / React Native: composants \texttt{Card}, \texttt{Badge}, \texttt{Button}; thème \texttt{colors}, \texttt{ThemeProvider}; navigation et état via hooks personnalisés.
+\section{Backend}
+Firebase Auth pour la gestion des utilisateurs et Firestore pour \texttt{users}, \texttt{doctors}, \texttt{appointments}, \texttt{prescriptions}, \texttt{medicalRecords}, \texttt{notifications}. Transactions pour unicité de créneau et cohérence.
+\section{Modules et Services}
+Hooks utilitaires: \texttt{useAuth}, \texttt{useRole}, \texttt{useUserDoc}, \texttt{usePaginatedQuery}. Services Firebase pour la logique CRUD et mises à jour atomiques.
+\chapter{Modèle de Données (Firestore)}
+\section{Collections principales}
+\begin{itemize}
+\item \texttt{users}: informations personnelles et rôle.
+\item \texttt{doctors}: spécialités et planning.
+\item \texttt{appointments}: rendez-vous avec identifiant unique \texttt{slotKey}.
+\item \texttt{prescriptions}: médicaments et dosage.
+\item \texttt{medicalRecords}: historique médical.
+\item \texttt{notifications}: alertes pour utilisateurs.
+\end{itemize}
+\section{Schéma \texttt{appointments}}
+\begin{table}[H]
+\centering
+\caption{Schéma de la collection \texttt{appointments}}
+\begin{tabular}{|l|l|l|}
+\hline
+Champ & Type & Description \\
+\hline
+id (slotKey) & string & doctorId\_YYYY-MM-DD\_HH:MM \\
+doctorId & string & Identifiant du médecin \\
+patientId & string & Identifiant du patient \\
+doctorName & string & Nom du médecin \\
+clinicName & string & Nom de la clinique \\
+patientName & string & Nom du patient \\
+scheduledAt & Timestamp & Date et heure du rendez-vous \\
+status & string & pending|confirmed|cancelled|completed \\
+reason & string & Objet du rendez-vous \\
+notes & string & Notes additionnelles \\
+createdAt & Timestamp & Date de création \\
+\hline
+\end{tabular}
+\end{table}
+\chapter{Conception UML}
+\section{Diagramme de Classes}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{assets/classes.png}
+\caption{Diagramme de classes MyClinic: structure des entités et relations.}
+\end{figure}
+\section{Diagramme de Cas d’Utilisation}
+\begin{figure}[H]
+\centering
+\adjustbox{max width=\textwidth}{\includegraphics{assets/usecase.png}}
+\caption{Cas d’utilisation pour Patient, Médecin, Admin.}
+\end{figure}
+\section{Diagramme de Séquence}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{assets/sequence.png}
+\caption{Séquence: réservation atomique et confirmation médecin.}
+\end{figure}
+\section{Diagramme d’Activité}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{assets/activity.png}
+\caption{Activité: cycle de vie d’un rendez-vous.}
+\end{figure}
+\chapter{Implémentation détaillée}
+\section{Flux de Réservation}
+Sélection d’un créneau depuis \texttt{doctors.availability}. Créneaux indisponibles via \texttt{appointments} (statuts \(\neq\) cancelled). Transaction sur \texttt{appointments/\{slotKey\}}; statut initial \texttt{pending}.
+\section{Actions Médecin}
+Mises à jour: \texttt{confirmed}, \texttt{cancelled}. Rafraîchissement UI et cohérence des données.
+\section{Auto-Completion}
+Conversion automatique en \texttt{completed} des rendez-vous échus non annulés, au chargement des listes patient et médecin.
+\section{Notifications}
+Rappels/confirmations (extension possible).
+\chapter{Sécurité et Règles}
+\section{Authentification}
+Gestion des comptes et rôles via Firebase Auth.
+\section{Règles Firestore}
+Contrôle d’accès par rôle et propriété des documents; unicité par \texttt{slotKey} et logique transactionnelle.
+\section{Confidentialité}
+Données minimales, pas de secrets exposés côté client.
+\chapter{Tests et Validation}
+\section{Plan de Tests}
+Réservation, collisions, confirmation/annulation, auto-completion, indisponibilités.
+\section{Résultats}
+Robustesse des transactions, cohérence des statuts, fluidité UX.
+\section{Performances}
+Temps de réponse, coût des requêtes; index Firestore si nécessaire.
+\chapter{Déploiement et Exploitation}
+\section{Pré-requis}
+Node.js, Expo, Firebase configuré; images dans \texttt{assets/}.
+\section{Exécution Locale}
+Démarrage mobile; option web si \texttt{react-native-web}; variables Firebase dans \texttt{services/firebase.js}.
+\section{Distribution}
+Packaging et consignes de publication.
+\chapter{Gestion de Projet}
+\section{Organisation}
+Groupe jusqu’à 4, responsabilités, jalons. Gestion sur Taiga: Kanban, backlog, sprints, tickets.
+\section{Suivi}
+Avancement hebdomadaire: commits et tâches terminées. Captures Taiga: board, backlog, burndown.
+\section{Git}
+Lien dépôt GitHub/GitLab; implication de chaque membre visible dans les commits.
+\chapter{Résultats et Discussion}
+Suppression des doubles réservations, clarté du cycle de vie, efficacité des actions médecin, satisfaction utilisateur; limites et améliorations.
+\chapter{Limites et Perspectives}
+Scalabilité, notifications push, congés, iCal, analytics, audit.
+\chapter{Conclusion}
+Synthèse des apports techniques et fonctionnels, conformité aux objectifs, perspectives d’industrialisation.
+\chapter*{Références}
+\addcontentsline{toc}{chapter}{Références}
+\begin{thebibliography}{9}
+\bibitem{expo} Expo Documentation
+\bibitem{reactnative} React Native Documentation
+\bibitem{firebase} Firebase Auth \& Firestore Documentation
+\bibitem{uml} UML \& PlantUML Documentation
+\bibitem{taiga} Taiga — gestion de projet agile
+\end{thebibliography}
+\appendix
+\chapter{Annexes — Captures d’Écran}
+\section{Écrans Patient}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{assets/screens/patient_home.png}
+\caption{Accueil Patient}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{assets/screens/search_doctors.png}
+\caption{Recherche de médecins}
+\end{subfigure}
+\end{figure}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{assets/screens/doctor_details.png}
+\caption{Détails médecin}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{assets/screens/my_appointments.png}
+\caption{Mes rendez-vous}
+\end{subfigure}
+\end{figure}
+\section{Écrans Médecin}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{assets/screens/doctor_appointments.png}
+\caption{Rendez-vous médecin}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{assets/screens/availability.png}
+\caption{Disponibilités}
+\end{subfigure}
+\end{figure}
+\section{Écrans Admin}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{assets/screens/admin_dashboard.png}
+\caption{Tableau de bord Admin}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{assets/screens/admin_appointments.png}
+\caption{Gestion des rendez-vous}
+\end{subfigure}
+\end{figure}
+\end{document}
